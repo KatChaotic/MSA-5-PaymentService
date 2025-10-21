@@ -1,0 +1,42 @@
+@startuml
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+Container_Ext(bank, "АПИ Банка")
+
+Container_Ext(email, "Smtp Server")
+
+Person(client, "Client")
+
+Person(operator, "Operator")
+
+System_Boundary(system, "Orchestr Pay") {
+    Container(payment_gateway, "Платежный шлюз", "", "Резервация / Списание / Переводы денег")
+
+    Container(payment_service, "Платежный сервис", "", "Оркестрация проведения процесса платежа")
+
+    Container(fraud_service, "Сервис анти-фрода", "", "Проверка транзакций")
+
+    Container(notification_service, "Сервис уведомлений", "", "Отправка уведомлений")
+
+    Container(kyc_service, "Сервис комплаенса", "", "<TO BE>")
+}
+
+Rel(client, payment_service, "Запрос перевода", "Rest/HTTP")
+
+BiRel(payment_gateway, bank, "Проведение платежей", "Rest/HTTP")
+
+BiRel(payment_service, payment_gateway, "", "Rest/HTTP")
+BiRel(payment_service, fraud_service, "", "AMQ")
+BiRel(payment_service, kyc_service, "", "AMQ")
+
+Rel(payment_service, client, "Уведомляет", "Websocket")
+
+Rel(payment_service, notification_service, "Уведомляет", "AMQ")
+Rel(fraud_service, notification_service, "Уведомляет", "AMQ")
+
+Rel(notification_service, email, "Отправляет")
+
+BiRel(operator, fraud_service, "Ручная проверка")
+
+@enduml
